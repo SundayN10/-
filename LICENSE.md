@@ -13,7 +13,7 @@ This software and associated documentation files (the "Software") are provided u
 You are permitted to:
 - Download and use the Software for personal, non-commercial purposes
 - Execute the Software in its original, unmodified form
-- View the source code for educational purposes only
+- YOU CANNOT SEE the source code 
 
 ### 3. Prohibited Activities
 
