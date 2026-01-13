@@ -3,506 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZARATIC RP • Next-Gen Roleplay</title>
+    <title>ZARATIC RP</title>
     
-    <link rel="icon" href="https://raw.githubusercontent.com/OGSunny/Testerweb/main/zaratic.png" type="image/png">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
         :root {
             --red: #ff2a2a;
-            --red-dim: #990f0f;
             --bg: #050505;
-            --surface: #0f0f0f;
-            --border: rgba(255, 255, 255, 0.1);
-            --text-main: #ffffff;
-            --text-muted: #a1a1aa;
-            
-            --font-display: 'Teko', sans-serif;
-            --font-body: 'Inter', sans-serif;
+            --text: #ffffff;
         }
 
-        /* --- CORE RESET & BASICS --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            background-color: var(--bg); 
-            color: var(--text-main); 
-            font-family: var(--font-body); 
-            overflow-x: hidden; 
-            line-height: 1.6;
-            background-image: radial-gradient(circle at 50% 0%, #1a0505 0%, var(--bg) 60%);
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevents scroll during loading */
+            height: 100vh; /* Critical for fixing the gap */
+            width: 100%;
         }
 
-        /* Optional: Noise Texture for gritty feel */
-        body::before {
-            content: "";
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
-            pointer-events: none; z-index: -1;
+        /* --- 1. THE LOADER --- */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
         }
 
-        /* --- CUSTOM CURSOR (Desktop Only) --- */
-        @media (hover: hover) and (pointer: fine) {
-            .cursor {
-                position: fixed; top: 0; left: 0; width: 20px; height: 20px;
-                border: 1px solid rgba(255, 42, 42, 0.5); background: rgba(255, 42, 42, 0.1);
-                border-radius: 50%; pointer-events: none; z-index: 10000;
-                transform: translate(-50%, -50%); transition: transform 0.1s ease, width 0.3s, height 0.3s;
-                mix-blend-mode: difference;
-            }
-            body:hover .cursor { opacity: 1; }
-            a:hover ~ .cursor, button:hover ~ .cursor { transform: translate(-50%, -50%) scale(2); background: var(--red); border: none; }
-            * { cursor: none !important; }
+        .loader-logo {
+            width: 80px;
+            animation: pulse 1.5s infinite ease-in-out;
+            filter: drop-shadow(0 0 20px var(--red));
         }
 
-        /* --- NAVIGATION (The "Really Good" Menu) --- */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+
+        /* --- 2. NAVIGATION & MOBILE MENU --- */
         nav {
-            position: fixed; top: 0; width: 100%; height: 80px;
-            padding: 0 5%;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 1000; transition: all 0.4s ease;
-            border-bottom: 1px solid transparent;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
         }
 
-        nav.scrolled {
-            background: rgba(5, 5, 5, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            height: 70px;
-        }
-
-        .logo { 
-            display: flex; align-items: center; gap: 15px;
-            font-family: var(--font-display); font-size: 1.8rem; font-weight: 600;
-            text-decoration: none; color: #fff; letter-spacing: 1px;
-            position: relative;
-        }
-        .logo img { width: 45px; filter: drop-shadow(0 0 10px rgba(255, 42, 42, 0.3)); }
-
-        .nav-links { display: flex; gap: 40px; }
-        
-        .nav-link { 
-            text-decoration: none; color: var(--text-muted); 
-            font-family: var(--font-display); font-size: 1.3rem; 
-            text-transform: uppercase; letter-spacing: 0.5px;
-            position: relative; transition: 0.3s;
-            padding: 5px 0;
-        }
-
-        /* Menu Hover Animation */
-        .nav-link::after {
-            content: ''; position: absolute; bottom: 0; left: 0;
-            width: 0%; height: 2px; background: var(--red);
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 10px var(--red);
-        }
-        
-        .nav-link:hover { color: #fff; }
-        .nav-link:hover::after { width: 100%; }
-        .nav-link.active { color: #fff; }
-        .nav-link.active::after { width: 100%; background: #fff; box-shadow: none; }
-
-        .menu-toggle { display: none; font-size: 1.5rem; color: #fff; cursor: pointer; }
-
-        /* --- MOBILE MENU --- */
-        .mobile-menu {
-            position: fixed; inset: 0; background: #000; 
-            z-index: 999; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; gap: 30px;
-            clip-path: circle(0% at 100% 0); transition: clip-path 0.6s cubic-bezier(0.85, 0, 0.15, 1);
-        }
-        .mobile-menu.open { clip-path: circle(150% at 100% 0); }
-        .mobile-link {
-            font-family: var(--font-display); font-size: 3.5rem; color: rgba(255,255,255,0.5); 
-            text-decoration: none; text-transform: uppercase; transition: 0.3s;
-        }
-        .mobile-link:hover { color: var(--red); transform: translateX(10px); }
-
-        /* --- HERO SECTION --- */
-        .hero {
-            min-height: 100vh; display: flex; align-items: center; padding: 0 5%;
-            position: relative; overflow: hidden; padding-top: 80px;
-        }
-        
-        .hero-glow {
-            position: absolute; top: 20%; left: -10%; width: 50vw; height: 50vw;
-            background: radial-gradient(circle, rgba(255, 42, 42, 0.15) 0%, transparent 70%);
-            filter: blur(80px); z-index: 0; pointer-events: none;
-        }
-
-        .hero-content { position: relative; z-index: 10; max-width: 850px; }
-        
-        .badge {
-            display: inline-block; padding: 6px 16px; margin-bottom: 25px;
-            border: 1px solid rgba(255, 42, 42, 0.3); border-radius: 50px;
-            background: rgba(255, 42, 42, 0.05); color: var(--red);
-            font-family: var(--font-body); font-size: 0.8rem; font-weight: 600;
-            letter-spacing: 1px; text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(255, 42, 42, 0.1);
-        }
-
-        h1 { 
-            font-family: var(--font-display); font-size: clamp(4.5rem, 11vw, 9.5rem); 
-            line-height: 0.85; text-transform: uppercase; margin-bottom: 30px;
+        .logo {
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'Teko', sans-serif;
+            font-size: 1.5rem;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            text-decoration: none;
         }
-        h1 span { 
-            color: transparent; -webkit-text-stroke: 1px #fff; 
-            position: relative; display: inline-block;
-        }
-        h1 span::before {
-            content: attr(data-text); position: absolute; left: 0; top: 0;
-            width: 0%; height: 100%; color: var(--red); -webkit-text-stroke: 0px;
-            overflow: hidden; border-right: 2px solid var(--red);
-            animation: typeFill 4s cubic-bezier(0.7, 0, 0.3, 1) infinite alternate;
+        .logo img { width: 35px; }
+
+        .burger {
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 200;
+            transition: 0.3s;
         }
 
-        .hero-desc { 
-            color: var(--text-muted); max-width: 550px; margin-bottom: 45px; 
-            font-size: 1.15rem; border-left: 2px solid rgba(255,255,255,0.1); padding-left: 20px;
+        /* Full Screen Overlay Menu */
+        .mobile-menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            /* Hidden by default */
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
-        .btn-group { display: flex; gap: 20px; flex-wrap: wrap; }
-        
+
+        /* Active State for Menu */
+        .mobile-menu-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: scale(1);
+        }
+
+        .menu-link {
+            font-family: 'Teko', sans-serif;
+            font-size: 3rem;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .menu-link:hover {
+            color: var(--red);
+            letter-spacing: 2px;
+        }
+
+        /* --- 3. HERO SECTION (Fixing the Gap) --- */
+        .hero {
+            height: 100vh; /* Takes full screen height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Pushes content to exact middle */
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            background: radial-gradient(circle at center, #1a0505 0%, #000000 100%);
+        }
+
+        /* Optional Background Image (Uncomment to use) */
+        .hero-bg-img {
+            position: absolute; inset: 0;
+            background-image: url('https://raw.githubusercontent.com/OGSunny/Testerweb/main/PSX_20251120_171438.png');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.2; /* Darkens image so text pops */
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Button Styling */
         .btn {
-            position: relative; padding: 16px 45px; 
-            font-family: var(--font-display); font-size: 1.5rem;
-            text-decoration: none; text-transform: uppercase; letter-spacing: 1px;
-            border-radius: 4px; overflow: hidden; display: inline-flex; 
-            align-items: center; gap: 12px; transition: 0.4s; z-index: 1;
-        }
-        
-        .btn-primary { 
-            background: var(--red); color: #fff; border: 1px solid var(--red);
-            box-shadow: 0 10px 30px rgba(255, 42, 42, 0.2);
-        }
-        .btn-primary::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transition: 0.5s; z-index: -1;
-        }
-        .btn-primary:hover { box-shadow: 0 10px 40px rgba(255, 42, 42, 0.4); transform: translateY(-3px); }
-        .btn-primary:hover::before { left: 100%; }
-
-        .btn-secondary { 
-            background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); 
-        }
-        .btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
-
-        .hero-img {
-            position: absolute; right: -8%; bottom: 0; height: 95vh;
-            pointer-events: none; z-index: 5; opacity: 1;
-            filter: drop-shadow(-50px 0 50px rgba(0,0,0,0.5));
-            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-family: 'Teko', sans-serif;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        /* --- SPOTLIGHT BENTO GRID --- */
-        .section { padding: 120px 5%; position: relative; }
-        
-        .section-header { margin-bottom: 60px; }
-        .section-title { 
-            font-family: var(--font-display); font-size: 4rem; text-transform: uppercase; 
-            line-height: 1; margin-bottom: 15px;
+        .btn-red {
+            background: var(--red);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 42, 42, 0.3);
+            border: 1px solid var(--red);
         }
-        .section-subtitle { color: var(--red); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+        .btn-red:active { transform: scale(0.98); }
 
-        .bento-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px;
+        .btn-dark {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
         }
+        .btn-dark:active { background: rgba(255,255,255,0.1); }
 
-        /* Spotlight Card Logic */
-        .card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px; padding: 40px;
-            position: relative; overflow: hidden;
-            display: flex; flex-direction: column; justify-content: flex-end;
-            cursor: default; transition: transform 0.3s;
-        }
-        
-        /* The Glow Effect layer */
-        .card::before {
-            content: "";
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255, 42, 42, 0.06), transparent 40%);
-            opacity: 0; transition: opacity 0.5s; pointer-events: none; z-index: 1;
-        }
-        
-        /* The Border Reveal layer */
-        .card::after {
-            content: "";
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255, 42, 42, 0.3), transparent 40%);
-            opacity: 0; transition: opacity 0.5s; z-index: 0;
-            border-radius: inherit;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude; -webkit-mask-composite: xor; padding: 1px; /* border width */
-        }
-
-        .card:hover { transform: translateY(-5px); }
-        .card:hover::before, .card:hover::after { opacity: 1; }
-
-        .card-content { position: relative; z-index: 2; }
-        .card-icon { 
-            font-size: 2.5rem; color: var(--red); margin-bottom: 25px; 
-            display: inline-block; filter: drop-shadow(0 0 15px rgba(255,42,42,0.4));
-        }
-        .card h3 { 
-            font-family: var(--font-display); font-size: 2.2rem; margin-bottom: 15px; 
-            text-transform: uppercase; color: #fff;
-        }
-        .card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; }
-
-        .span-2 { grid-column: span 2; }
-        .span-3 { grid-column: span 3; }
-
-        /* --- FOOTER --- */
-        footer {
-            border-top: 1px solid var(--border); background: #020202;
-            padding: 80px 5% 40px; text-align: center; position: relative;
-        }
-        footer::before {
-            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 80%; height: 1px; background: linear-gradient(90deg, transparent, var(--red), transparent);
-            opacity: 0.5;
-        }
-        .socials { display: flex; justify-content: center; gap: 15px; margin-bottom: 40px; }
-        .social-link {
-            width: 55px; height: 55px; border-radius: 12px; background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-            color: #fff; font-size: 1.2rem; transition: 0.3s;
-        }
-        .social-link:hover { 
-            background: var(--red); border-color: var(--red); 
-            transform: translateY(-5px) rotate(10deg); 
-            box-shadow: 0 10px 20px rgba(255,42,42,0.2);
-        }
-        .copy { color: #555; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* --- RESPONSIVE --- */
-        @media (max-width: 1200px) {
-            .hero-img { height: 70vh; opacity: 0.4; }
-        }
-        @media (max-width: 1024px) {
-            .nav-links { display: none; }
-            .menu-toggle { display: block; }
-            .bento-grid { grid-template-columns: repeat(2, 1fr); }
-            .span-3, .span-2 { grid-column: span 2; }
-        }
-        @media (max-width: 768px) {
-            .hero { padding-top: 120px; text-align: center; display: block; }
-            .hero-content { margin: 0 auto; }
-            .hero-desc { margin: 0 auto 40px; border: none; padding: 0; }
-            .btn-group { justify-content: center; }
-            .hero-img { display: none; }
-            .bento-grid { grid-template-columns: 1fr; }
-            .span-3, .span-2 { grid-column: span 1; }
-            h1 { font-size: 4rem; }
-            .section-title { font-size: 3rem; }
-        }
-
-        @keyframes typeFill { 0% { width: 0; } 50% { width: 100%; border-right-color: transparent; } 100% { width: 100%; border-right-color: transparent; } }
     </style>
 </head>
 <body>
 
-    <div id="loader" style="position: fixed; inset: 0; background: #000; z-index: 20000; display: flex; justify-content: center; align-items: center;">
-        <img src="https://raw.githubusercontent.com/OGSunny/Testerweb/main/zaratic.png" style="width: 80px; animation: pulse 1s infinite;" alt="Loading">
+    <div id="loader">
+        <img src="https://raw.githubusercontent.com/OGSunny/Testerweb/main/zaratic.png" class="loader-logo" alt="Loading">
     </div>
 
-    <div class="cursor"></div>
-
-    <nav id="navbar">
+    <nav>
         <a href="#" class="logo">
-            <img src="https://raw.githubusercontent.com/OGSunny/Testerweb/main/zaratic.png" alt="Zaratic Logo">
+            <img src="https://raw.githubusercontent.com/OGSunny/Testerweb/main/zaratic.png" alt="Logo">
             ZARATIC RP
         </a>
-        <div class="nav-links">
-            <a href="#hero" class="nav-link active">მთავარი</a>
-            <a href="#features" class="nav-link">ფუნქციები</a>
-            <a href="https://discord.gg/3d47R7tw" target="_blank" class="nav-link">ფორუმი</a>
-            <a href="donation.html" class="nav-link">მაღაზია</a>
-        </div>
-        <div class="menu-toggle" onclick="toggleMenu()">
-            <i class="fas fa-bars"></i>
+        <div class="burger" onclick="toggleMenu()">
+            <i class="fas fa-bars" id="burgerIcon"></i>
         </div>
     </nav>
 
-    <div class="mobile-menu" id="mobileMenu">
-        <div style="position: absolute; top: 30px; right: 5%; color: #fff; font-size: 2rem; cursor: pointer;" onclick="toggleMenu()">✕</div>
-        <a href="#hero" class="mobile-link" onclick="toggleMenu()">მთავარი</a>
-        <a href="#features" class="mobile-link" onclick="toggleMenu()">ფუნქციები</a>
-        <a href="donation.html" class="mobile-link" onclick="toggleMenu()">მაღაზია</a>
-        <a href="https://discord.gg/3d47R7tw" class="mobile-link" onclick="toggleMenu()">DISCORD</a>
+    <div class="mobile-menu-overlay" id="mobileMenu">
+        <a href="#" class="menu-link" onclick="toggleMenu()">მთავარი</a>
+        <a href="#" class="menu-link" onclick="toggleMenu()">შესახებ</a>
+        <a href="donation.html" class="menu-link" onclick="toggleMenu()">მაღაზია</a>
+        <a href="https://discord.gg/3d47R7tw" class="menu-link" onclick="toggleMenu()">DISCORD</a>
     </div>
 
-    <section class="hero" id="hero">
-        <div class="hero-glow"></div>
-        <div class="hero-content">
-            <span class="badge fade-in">Georgian SA-MP Community</span>
-            <h1 class="fade-in">ZARATIC <br><span data-text="ROLEPLAY">ROLEPLAY</span></h1>
-            <p class="hero-desc fade-in">
-                დაიწყე ახალი ცხოვრება ყველაზე სტაბილურ და ინოვაციურ ქართულ სერვერზე. 
-                რეალური ეკონომიკა, უნიკალური სისტემები და გარემო, რომელიც შეგიყვარდება.
-            </p>
-            <div class="btn-group fade-in">
-                <a href="#" class="btn btn-primary" onclick="copyIP()">
-                    <i class="fas fa-play"></i> <span id="ip-text">94.23.168.153:8777</span>
-                </a>
-                <a href="https://discord.gg/3d47R7tw" target="_blank" class="btn btn-secondary">
-                    <i class="fab fa-discord"></i> შემოგვიერთდი
-                </a>
-            </div>
-        </div>
-        <img src="https://raw.githubusercontent.com/OGSunny/Testerweb/main/PSX_20251120_171438.png" class="hero-img" alt="Character">
-    </section>
+    <section class="hero">
+        <div class="hero-bg-img"></div> <div class="hero-content">
+            <a href="#" class="btn btn-red" onclick="copyIP()">
+                <i class="fas fa-play"></i> 
+                <span id="ip-text">94.23.168.153:8777</span>
+            </a>
 
-    <section class="section" id="features">
-        <div class="section-header fade-up">
-            <span class="section-subtitle">რატომ ჩვენ?</span>
-            <h2 class="section-title">სერვერის <span style="color: var(--red);">უპირატესობები</span></h2>
-        </div>
-        
-        <div class="bento-grid" id="cards-container">
-            <div class="card span-2 fade-up">
-                <div class="card-content">
-                    <i class="fas fa-code card-icon"></i>
-                    <h3>უნიკალური მოდი</h3>
-                    <p>სრულიად ახალი სათამაშო კოდი, დაწერილი ნულიდან. მაქსიმალური ოპტიმიზაცია, მაღალი FPS და სისტემები, რომლებსაც სხვაგან ვერ ნახავთ.</p>
-                </div>
-            </div>
-            <div class="card span-2 fade-up">
-                <div class="card-content">
-                    <i class="fas fa-shield-halved card-icon"></i>
-                    <h3>დაცული გარემო</h3>
-                    <p>ჩვენი პირადი Anti-Cheat სისტემა და ადმინისტრაციის აქტიური მონიტორინგი უზრუნველყოფს სამართლიან თამაშს.</p>
-                </div>
-            </div>
-            <div class="card fade-up">
-                <div class="card-content">
-                    <i class="fas fa-car card-icon"></i>
-                    <h3>ავტო სისტემა</h3>
-                    <p>დეტალური ტიუნინგი, რეალისტური მართვა და იშვიათი მოდელები.</p>
-                </div>
-            </div>
-            <div class="card span-3 fade-up">
-                <div class="card-content">
-                    <i class="fas fa-users-gear card-icon"></i>
-                    <h3>Community Support</h3>
-                    <p>მეგობრული გარემო და გამოცდილი ადმინისტრაცია, რომელიც მზადაა დაგეხმაროთ 24/7 რეჟიმში. დამწყებთათვის გვაქვს სპეციალური გიდები.</p>
-                </div>
-            </div>
+            <a href="https://discord.gg/3d47R7tw" class="btn btn-dark">
+                <i class="fab fa-discord"></i> 
+                შემოგვიერთდი
+            </a>
         </div>
     </section>
-
-    <footer>
-        <div class="logo" style="justify-content: center; margin-bottom: 30px;">
-            <img src="https://raw.githubusercontent.com/OGSunny/Testerweb/main/zaratic.png" alt="Logo">
-            ZARATIC RP
-        </div>
-        <div class="socials">
-            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
-            <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
-            <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
-        </div>
-        <p class="copy">© 2025 ZARATIC ROLEPLAY. DESIGNED FOR THE BEST.</p>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
     <script>
-        gsap.registerPlugin(ScrollTrigger);
-
-        // --- Loader ---
+        // Loader Logic
         window.addEventListener('load', () => {
-            gsap.to("#loader", { opacity: 0, duration: 0.5, onComplete: () => {
-                document.getElementById('loader').style.display = 'none';
-                initAnimations();
-            }});
+            const loader = document.getElementById('loader');
+            // Give it a small delay so people see the cool animation
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    document.body.style.overflow = 'auto'; // Allow scroll again
+                }, 500);
+            }, 1000);
         });
 
-        // --- Animations ---
-        function initAnimations() {
-            // Hero Elements Stagger
-            gsap.from(".fade-in", {
-                y: 50, opacity: 0, duration: 1, stagger: 0.2, ease: "power3.out"
-            });
-            
-            // Hero Image Slide
-            gsap.from(".hero-img", {
-                x: 100, opacity: 0, duration: 1.5, delay: 0.5, ease: "power2.out"
-            });
-
-            // Scroll Triggers for Features
-            gsap.utils.toArray('.fade-up').forEach(element => {
-                gsap.from(element, {
-                    scrollTrigger: {
-                        trigger: element,
-                        start: "top 85%",
-                        toggleActions: "play none none reverse"
-                    },
-                    y: 50, opacity: 0, duration: 0.8, ease: "power3.out"
-                });
-            });
-        }
-
-        // --- Spotlight Effect (The "Magic" Part) ---
-        const cardsContainer = document.getElementById("cards-container");
-        const cards = document.querySelectorAll(".card");
-
-        cardsContainer.addEventListener("mousemove", (e) => {
-            for (const card of cards) {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                card.style.setProperty("--mouse-x", `${x}px`);
-                card.style.setProperty("--mouse-y", `${y}px`);
-            }
-        });
-
-        // --- Cursor Logic ---
-        const cursor = document.querySelector('.cursor');
-        document.addEventListener('mousemove', (e) => {
-            if(cursor) {
-                cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
-            }
-        });
-
-        // --- Navbar Scroll Effect ---
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('navbar');
-            if(window.scrollY > 50) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
-            }
-        });
-
-        // --- Utilities ---
+        // Menu Logic
         function toggleMenu() {
-            document.getElementById('mobileMenu').classList.toggle('open');
+            const menu = document.getElementById('mobileMenu');
+            const icon = document.getElementById('burgerIcon');
+            
+            menu.classList.toggle('active');
+            
+            if(menu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times'); // Change to X
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars'); // Change back to Hamburger
+            }
         }
 
+        // Copy IP Logic
         function copyIP() {
             const ip = "94.23.168.153:8777";
             navigator.clipboard.writeText(ip).then(() => {
                 const txt = document.getElementById('ip-text');
-                const old = txt.innerText;
+                const originalText = txt.innerText;
+                
                 txt.innerText = "COPIED!";
-                txt.style.color = "#00ff00";
                 setTimeout(() => {
-                    txt.innerText = old;
-                    txt.style.color = "#fff";
-                }, 2000);
+                    txt.innerText = originalText;
+                }, 1500);
             });
         }
     </script>
