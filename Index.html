@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZARATIC RP • The Next Generation</title>
+    
+    <link rel="icon" href="https://raw.githubusercontent.com/OGSunny/Testerweb/main/zaratic.png" type="image/png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600;700&family=Manrope:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --red: #ff2a2a;
+            --red-dark: #8a0000;
+            --black: #080808;
+            --charcoal: #121212;
+            --white: #ffffff;
+            --gray: #888888;
+            --font-head: 'Teko', sans-serif;
+            --font-body: 'Manrope', sans-serif;
+        }
+
+        /* --- BASE & UTILS --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body { 
+            background-color: var(--black); 
+            color: var(--white); 
+            font-family: var(--font-body); 
+            overflow-x: hidden;
+        }
+
+        /* Cinematic Noise Overlay */
+        .noise {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9000; opacity: 0.05;
+            background: url('https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.3.0/examples/assets/paper_fibers.png');
+        }
+
+        /* --- CUSTOM CURSOR (Magnetic) --- */
+        .cursor {
+            position: fixed; top: 0; left: 0; width: 20px; height: 20px;
+            background: var(--white); border-radius: 50%;
+            transform: translate(-50%, -50%); pointer-events: none;
+            z-index: 10000; mix-blend-mode: difference;
+            transition: width 0.3s, height 0.3s, opacity 0.3s;
+        }
+        .cursor.hovered { width: 50px; height: 50px; opacity: 0.5; }
+
+        /* --- LOADER --- */
+        .preloader {
+            position: fixed; inset: 0; background: var(--black); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column;
+        }
+        .bar-container {
+            width: 200px; height: 2px; background: #333; margin-top: 20px; overflow: hidden;
+        }
+        .bar {
+            width: 0%; height: 100%; background: var(--red);
+            transition: width 0.5s ease;
+        }
+        .counter { font-family: var(--font-head); font-size: 4rem; line-height: 1; }
+
+        /* --- NAVIGATION --- */
+        nav {
+            position: fixed; top: 0; width: 100%; padding: 30px 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; mix-blend-mode: difference;
+        }
+        .logo { font-family: var(--font-head); font-size: 2rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+        
+        .menu-trigger {
+            font-family: var(--font-head); font-size: 1.5rem; text-transform: uppercase;
+            position: relative; overflow: hidden;
+        }
+        .menu-trigger::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
+            background: var(--white); transform: scaleX(0); transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .menu-trigger:hover::after { transform: scaleX(1); transform-origin: left; }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            height: 100vh; position: relative; overflow: hidden;
+            display: flex; align-items: center; padding: 0 5%;
+        }
+        
+        .hero-bg-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: var(--font-head); font-size: 25vw; font-weight: 700;
+            color: rgba(255,255,255,0.02); line-height: 0.8; white-space: nowrap;
+            pointer-events: none; user-select: none;
+        }
+
+        .hero-content { position: relative; z-index: 5; max-width: 800px; }
+
+        h1 {
+            font-family: var(--font-head); font-size: clamp(4rem, 10vw, 9rem);
+            line-height: 0.85; text-transform: uppercase; margin-bottom: 30px;
+        }
+        h1 .red-text { color: var(--red); display: inline-block; }
+        
+        .hero-desc {
+            font-size: 1.1rem; color: var(--gray); max-width: 450px; margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .hero-btn {
+            display: inline-flex; align-items: center; gap: 15px;
+            padding: 15px 35px; background: var(--white); color: var(--black);
+            font-family: var(--font-head); font-size: 1.4rem; font-weight: 600;
+            text-transform: uppercase; text-decoration: none;
+            transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .hero-btn:hover { background: var(--red); color: var(--white); padding-left: 45px; }
+
+        /* Floating Character */
+        .hero-char {
+            position: absolute; right: -5%; bottom: -10%; height: 110vh;
+            z-index: 4; pointer-events: none;
+            filter: drop-shadow(-20px 0 50px rgba(0,0,0,0.5));
+            will-change: transform;
+        }
+
+        /* --- INFINITE MARQUEE --- */
+        .marquee {
+            background: var(--red); color: var(--black); padding: 15px 0;
+            overflow: hidden; white-space: nowrap; transform: rotate(-2deg) scale(1.05);
+            margin: 50px 0; border-top: 2px solid var(--black); border-bottom: 2px solid var(--black);
+        }
+        .marquee-content {
+            display: inline-block; animation: scroll 20s linear infinite;
+        }
+        .marquee span {
+            font-family: var(--font-head); font-size: 3rem; font-weight: 700;
+            text-transform: uppercase; margin: 0 40px;
+        }
+        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* --- FEATURES (Bento Grid) --- */
+        .features { padding: 100px 5%; max-width: 1400px; margin: 0 auto; }
+        .section-title {
+            font-family: var(--font-head); font-size: 4rem; text-transform: uppercase;
+            margin-bottom: 60px; line-height: 0.9;
+        }
+        
+        .grid {
+            display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px;
+        }
+        .card {
+            background: var(--charcoal); padding: 40px; border: 1px solid #222;
+            display: flex; flex-direction: column; justify-content: space-between;
+            transition: 0.4s; position: relative; overflow: hidden;
+        }
+        .card:hover { border-color: var(--red); transform: translateY(-5px); }
+        .card:hover .card-icon { color: var(--red); transform: scale(1.2); }
+        
+        .card-lg { grid-column: span 8; }
+        .card-sm { grid-column: span 4; }
+        .card-md { grid-column: span 6; }
+
+        .card-icon { font-size: 2.5rem; margin-bottom: 20px; color: #333; transition: 0.4s; }
+        .card h3 { font-family: var(--font-head); font-size: 2rem; margin-bottom: 10px; text-transform: uppercase; }
+        .card p { color: var(--gray); font-size: 0.95rem; line-height: 1.6; }
+
+        /* --- STATS STRIP --- */
+        .stats {
+            display: flex; justify-content: space-around; padding: 80px 5%;
+            border-top: 1px solid #222; border-bottom: 1px solid #222;
+            margin-top: 100px;
+        }
+        .stat-item { text-align: center; }
+        .stat-num { font-family: var(--font-head); font-size: 5rem; line-height: 1; color: var(--white); display: block; }
+        .stat-label { color: var(--red); text-transform: uppercase; font-size: 0.9rem; letter-spacing: 2px; }
+
+        /* --- FOOTER --- */
+        footer { padding: 100px 5% 40px; text-align: center; position: relative; overflow: hidden; }
+        .footer-logo { font-family: var(--font-head); font-size: 15vw; color: #111; line-height: 0.8; user-select: none; }
+        .socials { display: flex; justify-content: center; gap: 30px; margin-bottom: 50px; }
+        .social-link { 
+            color: var(--white); font-size: 1.5rem; border: 1px solid #333;
+            width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .social-link:hover { background: var(--red); border-color: var(--red); color: var(--black); }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .hero-char { height: 70vh; right: -15%; }
+            .card-lg, .card-sm, .card-md { grid-column: span 12; }
+            .hero-btn { padding: 12px 25px; font-size: 1.2rem; }
+        }
+        @media (max-width: 768px) {
+            .hero-char { display: none; } /* Remove char on mobile for clean look */
+            .hero-bg-text { display: none; }
+            .stats { flex-direction: column; gap: 40px; }
+            h1 { font-size: 4rem; }
+            .cursor { display: none; } /* No custom cursor on touch */
+            * { cursor: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="noise"></div>
+    
+    <div class="cursor"></div>
+
+    <div class="preloader">
+        <div class="counter">0</div>
+        <div class="bar-container">
+            <div class="bar"></div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="logo magnetic">ZARATIC</div>
+        <div class="menu-trigger magnetic" onclick="alert('Menu Coming Soon')">MENU</div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-bg-text">ZARATIC</div>
+        
+        <div class="hero-content">
+            <div class="reveal-text">
+                <h1>GEORGIA'S <br> <span class="red-text">NO.1</span> ROLEPLAY</h1>
+            </div>
+            <p class="hero-desc reveal-text">
+                შექმენი შენი რეალობა. უნიკალური სისტემები, სტაბილური ეკონომიკა და გარემო სადაც შენ წყვეტ თამაშის წესებს.
+            </p>
+            <a href="#" class="hero-btn magnetic reveal-text" onclick="copyIP()">
+                <i class="fas fa-play"></i>
+                <span id="ip-text">94.23.168.153</span>
+            </a>
+        </div>
+
+        <img src="https://raw.githubusercontent.com/OGSunny/Testerweb/main/PSX_20251120_171438.png" alt="Character" class="hero-char" data-speed="0.5">
+    </header>
+
+    <div class="marquee">
+        <div class="marquee-content">
+            <span>• START YOUR LEGACY • JOIN THE REVOLUTION • ZARATIC ROLE PLAY • GEORGIAN SAMp • </span>
+            <span>• START YOUR LEGACY • JOIN THE REVOLUTION • ZARATIC ROLE PLAY • GEORGIAN SAMP • </span>
+        </div>
+    </div>
+
+    <section class="features">
+        <h2 class="section-title reveal-text">სისტემური <span style="color:var(--gray)">ინოვაცია</span></h2>
+        
+        <div class="grid">
+            <div class="card card-lg magnetic">
+                <i class="fas fa-fingerprint card-icon"></i>
+                <div>
+                    <h3>უნიკალური იდენტობა</h3>
+                    <p>ჩვენ არ ვიყენებთ მზა სისტემებს. სერვერის კოდი დაწერილია ნულიდან, რაც უზრუნველყოფს მაქსიმალურ ოპტიმიზაციას და უნიკალურ ფუნქციონალს.</p>
+                </div>
+            </div>
+            <div class="card card-sm magnetic">
+                <i class="fas fa-shield-alt card-icon"></i>
+                <div>
+                    <h3>დაცული გარემო</h3>
+                    <p>მძლავრი ანტი-ჩიტ სისტემა და აქტიური ადმინისტრაცია.</p>
+                </div>
+            </div>
+            <div class="card card-sm magnetic">
+                <i class="fas fa-mobile-alt card-icon"></i>
+                <div>
+                    <h3>MOBILE LAUNCHER</h3>
+                    <p>ითამაშე ტელეფონით სრული კომფორტით.</p>
+                </div>
+            </div>
+            <div class="card card-lg magnetic" style="background: var(--red); border:none;">
+                <i class="fas fa-users card-icon" style="color:var(--black)"></i>
+                <div>
+                    <h3 style="color:var(--black)">ძლიერი კომუნა</h3>
+                    <p style="color:rgba(0,0,0,0.7)">ჩვენი მოთამაშეები ქმნიან ისტორიას. შემოგვიერთდი Discord-ზე და გაიცანი ისინი.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stat-item">
+            <span class="stat-num" data-val="2025">0</span>
+            <span class="stat-label">დაარსდა</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-num" id="player-stat" data-val="120">0</span>
+            <span class="stat-label">მოთამაშე ონლაინ</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-num" data-val="100">0</span>
+            <span class="stat-label">FPS სტაბილურობა</span>
+        </div>
+    </section>
+
+    <footer>
+        <div class="socials">
+            <a href="https://discord.gg/3d47R7tw" class="social-link magnetic"><i class="fab fa-discord"></i></a>
+            <a href="https://www.facebook.com/groups/geosampcommunityn1/" class="social-link magnetic"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://youtube.com/@zaraticrp" class="social-link magnetic"><i class="fab fa-youtube"></i></a>
+        </div>
+        <div class="footer-logo">ZARATIC</div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        // --- 1. PRELOADER LOGIC ---
+        const counter = document.querySelector('.counter');
+        const bar = document.querySelector('.bar');
+        let count = 0;
+
+        function updateLoader() {
+            if(count < 100) {
+                count += Math.random() * 10;
+                if(count > 100) count = 100;
+                counter.innerText = Math.floor(count) + '%';
+                bar.style.width = count + '%';
+                setTimeout(updateLoader, 50);
+            } else {
+                gsap.to('.preloader', { y: '-100%', duration: 1, ease: 'power4.inOut' });
+                initAnimations(); // Start animations after load
+            }
+        }
+        updateLoader();
+
+        // --- 2. CUSTOM CURSOR & MAGNETIC EFFECT ---
+        const cursor = document.querySelector('.cursor');
+        const magnetics = document.querySelectorAll('.magnetic');
+
+        document.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1 });
+        });
+
+        magnetics.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+        });
+
+        // --- 3. MAIN ANIMATIONS (GSAP) ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        function initAnimations() {
+            // Hero Text Stagger
+            gsap.from('h1', { y: 100, opacity: 0, duration: 1, delay: 0.5, ease: 'power4.out' });
+            gsap.from('.hero-desc', { y: 50, opacity: 0, duration: 1, delay: 0.7, ease: 'power4.out' });
+            gsap.from('.hero-btn', { y: 50, opacity: 0, duration: 1, delay: 0.9, ease: 'power4.out' });
+            
+            // Hero Character Parallax
+            gsap.to('.hero-char', {
+                y: 100,
+                scrollTrigger: {
+                    trigger: '.hero',
+                    start: 'top top',
+                    end: 'bottom top',
+                    scrub: true
+                }
+            });
+
+            // Feature Cards Stagger
+            gsap.from('.card', {
+                y: 100, opacity: 0, duration: 0.8, stagger: 0.2,
+                scrollTrigger: {
+                    trigger: '.grid',
+                    start: 'top 80%'
+                }
+            });
+
+            // Numbers Counter Animation
+            const stats = document.querySelectorAll('.stat-num');
+            stats.forEach(stat => {
+                let target = +stat.getAttribute('data-val');
+                if(stat.id === 'player-stat') target = Math.floor(Math.random() * (150 - 60) + 60); // Random fake player count
+
+                gsap.to(stat, {
+                    innerHTML: target,
+                    duration: 2,
+                    snap: { innerHTML: 1 },
+                    scrollTrigger: {
+                        trigger: '.stats',
+                        start: 'top 80%'
+                    }
+                });
+            });
+        }
+
+        // --- 4. COPY IP FUNCTION ---
+        function copyIP() {
+            navigator.clipboard.writeText('94.23.168.153:8777');
+            const txt = document.getElementById('ip-text');
+            const original = txt.innerText;
+            txt.innerText = "COPIED!";
+            txt.style.color = "var(--black)";
+            setTimeout(() => {
+                txt.innerText = original;
+                txt.style.color = "var(--black)";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
